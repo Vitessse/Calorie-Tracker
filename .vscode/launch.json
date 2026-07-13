@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/my-app/practice/js-refresher.js",
+            "runtimeExecutable": "/Users/judith/.nvm/versions/node/v26.5.0/bin/node"
+        }
+    ]
+}
