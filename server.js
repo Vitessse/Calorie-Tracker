@@ -1,35 +1,40 @@
+const Meal = require("./src/models/meal.model");
+require("dotenv").config();
 const express = require("express");
+const connectDB = require("./src/config/db");
+
 const app = express();
 const PORT = 3000;
 
+// Connect to MongoDB
+connectDB();
+
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello World! Calorie Tracker API is running.");
+app.get("/api/meals", async (req, res) => {
+  try {
+    const meals = await Meal.find().sort({ createdAt: -1 });
+    res.json(meals);
+  } catch (error) {
+    console.error("Error fetching meals:", error.message);
+    res.status(500).json({ error: "Failed to fetch meals" });
+  }
 });
 
-app.get("/api/status", (req, res) => {
-  res.json({ status: "ok", message: "API is healthy" });
-});
 
-// Temporary in-memory storage
-const meals = [];
 
-app.post("/api/meals", (req, res) => {
+app.post("/api/meals", async (req, res) => {
   const { name, calories } = req.body;
-
   if (!name || !calories) {
     return res.status(400).json({ error: "name and calories are required" });
   }
-
-  const newMeal = { id: meals.length + 1, name, calories };
-  meals.push(newMeal);
-
-  res.status(201).json(newMeal);
-});
-
-app.get("/api/meals", (req, res) => {
-  res.json(meals);
+  try {
+    const newMeal = await Meal.create({ name, calories });
+    res.status(201).json(newMeal);
+  } catch (error) {
+    console.error("Error saving meal:", error.message);
+    res.status(500).json({ error: "Failed to save meal" });
+  }
 });
 
 app.post("/api/estimate-calories", async (req, res) => {
@@ -58,25 +63,20 @@ app.post("/api/estimate-calories", async (req, res) => {
     const estimatedCalories = parseInt(data.response.trim(), 10);
 
     if (isNaN(estimatedCalories)) {
-      return res.status(502).json({ 
-        error: "Could not parse calorie estimate", 
-        raw: data.response 
+      return res.status(502).json({
+        error: "Could not parse calorie estimate",
+        raw: data.response,
       });
     }
 
-    res.json({ 
-      foodDescription, 
-      estimatedCalories 
+    res.json({
+      foodDescription,
+      estimatedCalories,
     });
-
   } catch (error) {
     console.error("Ollama error:", error.message);
     res.status(500).json({ error: "Could not reach Ollama. Is it running?" });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
 });
 
 app.post("/api/chat", async (req, res) => {
@@ -103,9 +103,12 @@ app.post("/api/chat", async (req, res) => {
 
     const data = await response.json();
     res.json({ reply: data.response.trim() });
-
   } catch (error) {
     console.error("Ollama error:", error.message);
     res.status(500).json({ error: "Could not reach Ollama. Is it running?" });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
