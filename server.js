@@ -21,6 +21,46 @@ app.get("/api/meals", async (req, res) => {
   }
 });
 
+app.delete("/api/meals/:id", async (req, res) => {
+  try {
+    const deletedMeal = await Meal.findByIdAndDelete(req.params.id);
+
+    if (!deletedMeal) {
+      return res.status(404).json({ error: "Meal not found" });
+    }
+
+    res.json({ message: "Meal deleted", deletedMeal });
+  } catch (error) {
+    console.error("Error deleting meal:", error.message);
+    res.status(500).json({ error: "Failed to delete meal" });
+  }
+});
+
+app.put("/api/meals/:id", async (req, res) => {
+  const { name, calories } = req.body;
+
+  if (!name || !calories) {
+    return res.status(400).json({ error: "name and calories are required" });
+  }
+
+  try {
+    const updatedMeal = await Meal.findByIdAndUpdate(
+  req.params.id,
+  { name, calories },
+  { returnDocument: "after", runValidators: true }
+);
+
+    if (!updatedMeal) {
+      return res.status(404).json({ error: "Meal not found" });
+    }
+
+    res.json(updatedMeal);
+  } catch (error) {
+    console.error("Error updating meal:", error.message);
+    res.status(500).json({ error: "Failed to update meal" });
+  }
+});
+
 
 
 app.post("/api/meals", async (req, res) => {
