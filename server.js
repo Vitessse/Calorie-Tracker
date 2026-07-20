@@ -10,6 +10,7 @@ const PORT = 3000;
 connectDB();
 
 app.use(express.json());
+app.use(express.static("public"));
 
 app.get("/api/meals", async (req, res) => {
   try {
